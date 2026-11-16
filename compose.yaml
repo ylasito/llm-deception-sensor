@@ -1,0 +1,28 @@
+services:
+  sensor:
+    build: .
+    restart: unless-stopped
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      LOG_DIR: /data
+      SENSOR_ID: ${SENSOR_ID:-local-sensor}
+      CAPTURE_MODE: ${CAPTURE_MODE:-metadata}
+      SENSOR_SECRET: ${SENSOR_SECRET:?Set SENSOR_SECRET in .env before starting}
+      REQUESTS_PER_MINUTE: ${REQUESTS_PER_MINUTE:-120}
+      MAX_REQUEST_BYTES: ${MAX_REQUEST_BYTES:-65536}
+    ports:
+      - "127.0.0.1:18080:8080" # SAFE DEFAULT: not public on host
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,noexec,nosuid
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    mem_limit: 192m
+    volumes:
+      - sensor_data:/data
+volumes:
+  sensor_data:

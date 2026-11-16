@@ -1,0 +1,53 @@
+# Fleet overlay: collector and shipper share ONE isolated loopback network namespace.
+# Do not publish the collector's port; its HTTP transport stays inside the shared namespace.
+# Requires lab/collector-keys.json and lab/shipper-key.txt.
+# docker compose -f compose.yaml -f compose.fleet.yaml up --build -d
+services:
+  collector:
+    build: .
+    command: ["python", "-m", "deceptionsensor", "collector", "--keys", "/run/secrets/collector_keys", "--database", "/fleet/events.sqlite3", "--host", "127.0.0.1", "--port", "18888"]
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,noexec,nosuid
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 100
+    mem_limit: 256m
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18888/healthz',timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+    secrets: [collector_keys]
+    volumes:
+      - fleet_data:/fleet
+  shipper:
+    build: .
+    network_mode: service:collector
+    depends_on:
+      collector:
+        condition: service_healthy
+      sensor:
+        condition: service_started
+    command: ["python", "-m", "deceptionsensor", "ship", "--log-dir", "/data", "--url", "http://127.0.0.1:18888", "--sensor-id", "${SENSOR_ID:-local-sensor}", "--key-file", "/run/secrets/shipper_key", "--follow", "--interval", "10"]
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,noexec,nosuid
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 100
+    mem_limit: 96m
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    secrets: [shipper_key]
+    volumes:
+      - sensor_data:/data:ro
+secrets:
+  collector_keys:
+    file: ./lab/collector-keys.json
+  shipper_key:
+    file: ./lab/shipper-key.txt
+volumes:
+  fleet_data:

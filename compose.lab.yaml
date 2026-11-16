@@ -1,0 +1,8 @@
+# Compose overlay: only for an explicitly initialized synthetic lab registry.
+# Usage: docker compose -f compose.yaml -f compose.lab.yaml up --build -d
+services:
+  sensor:
+    environment:
+      CANARY_REGISTRY: /opt/lab/registry.json
+    volumes:
+      - ./lab/registry.json:/opt/lab/registry.json:ro

@@ -1,0 +1,13 @@
+# Example only: adapt output to your own Elastic deployment and TLS credentials.
+filebeat.inputs:
+  - type: filestream
+    id: llm-deception-sensor
+    enabled: true
+    paths:
+      - /var/log/llm-deception/events.jsonl*
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+          overwrite_keys: false
+# Deliberately omit output.elasticsearch and credentials; configure for your SIEM.
