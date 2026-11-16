@@ -31,3 +31,18 @@ This is *not* full central management, high-fidelity deception, a complete MCP s
 - Synthetic context transport metrics by system/tool/memory/knowledge graph; Wilson 95% confidence intervals and observed/unknown separation. False-positive and false-negative estimates on external agents have not yet been validated.
 - Deterministic offline k-medoids grouping of *pseudonymous metadata-only behavior features*; no automatic retaliation or threat attribution.
 - Threat-intelligence technique mapping with independently verified labels remains backlog, along with calibration against independent agents and live local LLMs.
+
+
+## v0.5 implemented locally — metadata behavioral intelligence
+
+- Session sequence triage with limited rule patterns, scores for manual prioritization only, and strict metadata-only feature allowlists.
+- Jensen–Shannon drift comparisons across explicitly selected data windows; minimum sample gates.
+- Static local HTML intelligence dashboard, synthetic offline dataset generator, and CLI outputs.
+- No claim of trained attacker classifier, live-agent validation, fully autonomous learning, or production security posture.
+
+### Next hardening/validation
+
+- Verify LM Studio/Ollama owned-model compatibility on a supported Mac and record exact version and model tests.
+- Add per-experiment run IDs and signed session/run association to avoid attributing prior logs to a new experiment.
+- Support reproducible ground-truth labels and independently measured precision/recall, with blinded review.
+- Harden deployment, auth, retention, observability and cross-sensor time synchronization.

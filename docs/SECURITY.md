@@ -32,3 +32,8 @@ This is a **research prototype**, not a hardened internet honeynet or production
 Obtain written permission, isolate host/VPC, keep `HOST=127.0.0.1` by default, use generated random secrets, ensure `CAPTURE_MODE=metadata`, restrict listener and allowlisted egress at the firewall/VPC layer, terminate trusted HTTPS where needed, protect logs and registry files with least privilege, back up or rotate SQLite under policy, keep NTP time synchronized for signed message timestamps, test recovery, run independent security assessment before external exposure.
 
 Do not share authentic credentials, private agent memories, real customer data or sensitive prompts in public datasets or honeypot responses. All demos contain fictional synthetic values.
+
+
+## v0.5 privacy and inference limits
+
+The intelligence layer drops non-metadata events and all non-allowlisted free-text fields. Derived findings may include a 12-character prefix of an existing pseudonymous session hash, so treat reports as sensitive operational metadata and retain under controlled permissions. The offline HTML dashboard uses a restrictive content security policy and contains no external assets. Rule scores and Jensen–Shannon divergence are *descriptive* and never authorization to retaliate, block an endpoint, or attribute threat actors.
