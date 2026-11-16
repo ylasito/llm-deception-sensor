@@ -16,6 +16,7 @@ from .server import serve
 from .shipper import ship_logs
 from .research import research_init, research_run, research_report
 from .behavior import cluster_sessions
+from .intelligence import intelligence_report, drift_report, write_report, render_intelligence_dashboard
 
 
 def fleet_action(db: Path, command: str, output: Path | None = None) -> dict:
@@ -42,7 +43,7 @@ def fleet_action(db: Path, command: str, output: Path | None = None) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LLM Deception Sensor v0.4.0 (authorized research)")
+    parser = argparse.ArgumentParser(description="LLM Deception Sensor v0.5.0 (authorized research)")
     sub = parser.add_subparsers(dest="command")
     summary = sub.add_parser("summary", help="Offline aggregated telemetry")
     summary.add_argument("--log-dir", default="./data")
@@ -91,6 +92,23 @@ def main() -> None:
     cluster.add_argument("--max-events", type=int, default=10000)
     cluster.add_argument("--output")
 
+    intel = sub.add_parser("intel-report", help="Generate privacy-filtered offline session triage report")
+    intel.add_argument("--log-dir", default="./data")
+    intel.add_argument("--max-events", type=int, default=10000)
+    intel.add_argument("--top", type=int, default=20)
+    intel.add_argument("--output")
+    intel_dash = sub.add_parser("intel-dashboard", help="Generate local HTML triage dashboard")
+    intel_dash.add_argument("--log-dir", default="./data")
+    intel_dash.add_argument("--max-events", type=int, default=10000)
+    intel_dash.add_argument("--top", type=int, default=20)
+    intel_dash.add_argument("--output", default="./report/intelligence.html")
+    drift = sub.add_parser("intel-drift", help="Compare two metadata-only windows (descriptive JS drift)")
+    drift.add_argument("--baseline", required=True)
+    drift.add_argument("--current", required=True)
+    drift.add_argument("--max-events", type=int, default=10000)
+    drift.add_argument("--minimum-requests", type=int, default=30)
+    drift.add_argument("--threshold", type=float, default=0.15)
+    drift.add_argument("--output")
     collector = sub.add_parser("collector", help="Start authenticated fleet collector")
     collector.add_argument("--keys", required=True, help="JSON map of sensor IDs to 32+ char shared HMAC keys")
     collector.add_argument("--database", default="./fleet/events.sqlite3")
@@ -154,6 +172,18 @@ def main() -> None:
         if args.output:
             path = Path(args.output); path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    elif args.command == "intel-report":
+        result = intelligence_report(Path(args.log_dir), max_events=args.max_events, top=args.top)
+        if args.output:
+            write_report(result, Path(args.output))
+    elif args.command == "intel-dashboard":
+        intelligence = intelligence_report(Path(args.log_dir), max_events=args.max_events, top=args.top)
+        result = render_intelligence_dashboard(intelligence, Path(args.output))
+    elif args.command == "intel-drift":
+        result = drift_report(Path(args.baseline), Path(args.current), max_events=args.max_events,
+                              minimum_requests=args.minimum_requests, threshold=args.threshold)
+        if args.output:
+            write_report(result, Path(args.output))
     elif args.command == "collector":
         settings = CollectorSettings.from_file(Path(args.keys), args.host, args.port,
                     Path(args.database), Path(args.tls_cert) if args.tls_cert else None,

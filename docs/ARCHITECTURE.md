@@ -45,3 +45,8 @@ flowchart TD
 ## Important interpretive nuance
 
 A system prompt in a request to an intended/approved inference server is normal LLM API behavior. A *trust-policy violation* requires evidence that the agent sent protected context **to a disallowed endpoint**, for example because an endpoint trust policy was bypassed, not because the network sensor observed a prompt. Synthetic marker matches prove exact marked text crossed the measured interface. Heuristic indicators do not prove intent or compromise.
+
+
+## v0.5 offline behavioral intelligence
+
+`metadata JSONL -> strict field allowlist -> HMAC session chronology -> rule triage + baseline drift -> offline HTML/JSON`. Input may be individual sensor logs or JSONL exported from authenticated fleet collection. No external inference, model execution, real secrets or remote response actions are required for analytics. See [INTELLIGENCE-V05.md](INTELLIGENCE-V05.md).

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-deception-sensor"
-version = "0.4.0"
-description = "Local-first LLM/MCP deception and repeatable agent behavioral research sensor"
+version = "0.5.0"
+description = "Local-first LLM/MCP deception and agent behavior intelligence and controlled research sensor"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

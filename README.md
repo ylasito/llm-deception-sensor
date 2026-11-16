@@ -1,8 +1,10 @@
-# LLM Deception Sensor v0.4.0
+# LLM Deception Sensor v0.5.0
 
 **MIT-licensed, local-first AI deception and authorized-agent context-exposure research platform.** Independent research prototype. **Not AWS MadPot** or an AWS product. No internet deployment is implied or recommended.
 
-**New in v0.4:** bounded, repeatable **multi-turn research runs**, a controlled local-model tool loop, negative/withheld controls, Wilson 95% intervals, separation of approved vs unexpected marker delivery, and exploratory **metadata-only k-medoids clustering**. These features do not establish that an autonomous attacker was compromised. See [v0.4 research guide](docs/RESEARCH-V04.md).
+**New in v0.5:** privacy-filtered metadata-only agent-session sequence triage, deterministic behavioral rules, baseline Jensen–Shannon distribution shift monitoring, and offline intelligence dashboard. No adaptive ML classifier or attack attribution is claimed. See [v0.5 guide](docs/INTELLIGENCE-V05.md).
+
+**Previously in v0.4:** bounded, repeatable **multi-turn research runs**, a controlled local-model tool loop, negative/withheld controls, Wilson 95% intervals, separation of approved vs unexpected marker delivery, and exploratory **metadata-only k-medoids clustering**. These features do not establish that an autonomous attacker was compromised. See [v0.4 research guide](docs/RESEARCH-V04.md).
 
 **Inherited from v0.3:** authenticated **local-only inference relay** for a real model server; safe synthetic canary measurement; HMAC-signed, per-sensor **fleet telemetry collection**; SQLite deduplication; central offline reporting and HTML dashboard; collector-side optional TLS; isolated Docker Compose fleet overlay. It retains the v0.2 decoy OpenAI/Ollama/MCP API and calibration features.
 
@@ -10,7 +12,7 @@ Python 3.11+, **standard library only** for sensor and collector. Optional `open
 
 ## Capability matrix
 
-| Capability | State in v0.3 |
+| Capability | State as of v0.5 |
 |---|---|
 | Static OpenAI-compatible and Ollama decoys | Working; inherited v0.2 |
 | Synthetic MCP tools/resources | Working; **selected** 2025-03-26 JSON-RPC subset, not full MCP |
@@ -186,3 +188,18 @@ python3 -m deceptionsensor behavior-cluster --log-dir data --clusters 3 --output
 **Note:** Inference proxy mode requires `PROXY_UPSTREAM_URL` pointing to `http://127.0.0.1:<port>`, `PROXY_CLIENT_TOKEN` (minimum 24 characters), and `CAPTURE_MODE=metadata`; the token must be available to `research-run` through the env variable `PROXY_CLIENT_TOKEN`. `research-run` cannot be run unattended as a real-model test without provisioning an owned local model. `--mode scripted` is a calibration, not an autonomous agent.
 
 Full regression suite: `PYTHONPATH=src python3 -m unittest discover -s tests -v`. All real network traffic in automated tests is loopback only.
+
+
+## v0.5 — offline agent behavioral intelligence
+
+This is **descriptive telemetry analytics** only. v0.5 does not automatically learn attack intent or establish unauthorized exfiltration. Run a no-network demonstration:
+
+```sh
+export PYTHONPATH=src
+python3 examples/generate_intel_demo.py --output-dir lab/intel-demo
+python3 -m deceptionsensor intel-report --log-dir lab/intel-demo/current --output report/intel.json
+python3 -m deceptionsensor intel-dashboard --log-dir lab/intel-demo/current --output report/intel.html
+python3 -m deceptionsensor intel-drift --baseline lab/intel-demo/baseline --current lab/intel-demo/current --output report/drift.json
+```
+
+The 120 baseline and 120 current requests are **synthetically generated**, not collected from real agent clients. The v0.4 `research-report` is the separate mechanism for measuring known synthetic marker transport, and must never be presented as proof of a real trust-boundary breach. Read [Intelligence & validation protocol](docs/INTELLIGENCE-V05.md).
