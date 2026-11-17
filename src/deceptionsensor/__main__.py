@@ -17,6 +17,7 @@ from .shipper import ship_logs
 from .research import research_init, research_run, research_report
 from .behavior import cluster_sessions
 from .intelligence import intelligence_report, drift_report, write_report, render_intelligence_dashboard
+from .evidence import create_report, verify_report, write_private
 
 
 def fleet_action(db: Path, command: str, output: Path | None = None) -> dict:
@@ -43,7 +44,7 @@ def fleet_action(db: Path, command: str, output: Path | None = None) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LLM Deception Sensor v0.5.0 (authorized research)")
+    parser = argparse.ArgumentParser(description="LLM Deception Sensor v0.6.0 (authorized research)")
     sub = parser.add_subparsers(dest="command")
     summary = sub.add_parser("summary", help="Offline aggregated telemetry")
     summary.add_argument("--log-dir", default="./data")
@@ -109,6 +110,14 @@ def main() -> None:
     drift.add_argument("--minimum-requests", type=int, default=30)
     drift.add_argument("--threshold", type=float, default=0.15)
     drift.add_argument("--output")
+    evidence = sub.add_parser("evidence-report", help="Create privacy-filtered chain digest report for authorized lab")
+    evidence.add_argument("--log-dir", default="./data")
+    evidence.add_argument("--output", required=True)
+    evidence.add_argument("--key-env", default="EVIDENCE_HMAC_KEY")
+    ev_check = sub.add_parser("evidence-verify", help="Compare existing evidence report against current logs")
+    ev_check.add_argument("--log-dir", default="./data")
+    ev_check.add_argument("--report", required=True)
+    ev_check.add_argument("--key-env", default="EVIDENCE_HMAC_KEY")
     collector = sub.add_parser("collector", help="Start authenticated fleet collector")
     collector.add_argument("--keys", required=True, help="JSON map of sensor IDs to 32+ char shared HMAC keys")
     collector.add_argument("--database", default="./fleet/events.sqlite3")
@@ -155,6 +164,13 @@ def main() -> None:
             dest = Path(args.output)
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    elif args.command == "evidence-report":
+        result = create_report(Path(args.log_dir), signing_key=os.getenv(args.key_env, ""))
+        write_private(result, Path(args.output))
+    elif args.command == "evidence-verify":
+        verified = verify_report(json.loads(Path(args.report).read_text(encoding="utf-8")),
+                                 Path(args.log_dir), os.getenv(args.key_env, ""))
+        result = {"verified": verified, "interpretation": "Derived metadata integrity comparison only"}
     elif args.command == "research-init":
         result = research_init(Path(args.registry), Path(args.manifest))
     elif args.command == "research-run":

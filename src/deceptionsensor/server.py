@@ -21,6 +21,7 @@ from .storage import JsonlSink
 from .canary import CanaryRegistry
 from .mcp import dispatch as mcp_dispatch, PROTOCOL_VERSION as MCP_PROTOCOL
 from .proxy import LocalUpstream, POST_PATHS, GET_PATHS, is_safe_mime
+from .fidelity import openai_response, ollama_response, fingerprint
 
 
 FAKE_MODELS = ("llama3.2:latest", "qwen2.5:7b")
@@ -177,6 +178,7 @@ class SensorHandler(BaseHTTPRequestHandler):
             "mcp_method": mcp_method, "mcp_tool": mcp_tool,
             "canary_hits": registry_hits,
             "confirmed_synthetic_exposure": bool(registry_hits),
+            "fidelity": fingerprint(payload) if route in ("/v1/chat/completions", "/chat/completions", "/api/chat") else {},
         }
         lab_case = self.server.registry.case(self.headers.get("X-Lab-Case-ID", ""))
         if lab_case:
@@ -384,17 +386,14 @@ class SensorHandler(BaseHTTPRequestHandler):
         created = int(time.time())
         if path in ("/v1/chat/completions", "/chat/completions"):
             cid = "chatcmpl-" + uuid.uuid4().hex[:18]
-            base = {"id": cid, "created": created, "model": model}
+            result, chunks = openai_response(payload, cid, model, created)
             if payload.get("stream") is True:
-                def chunk(delta: dict, reason: str | None = None) -> dict:
-                    return {**base, "object": "chat.completion.chunk", "choices": [{"index": 0, "delta": delta, "finish_reason": reason}]}
-                self._stream([chunk({"role": "assistant", "content": ""}), chunk({"content": MODEL_TEXT}), chunk({}, "stop")], "sse")
+                self._stream(chunks, "sse")
             else:
-                self._send(200, {**base, "object": "chat.completion", "choices": [{"index": 0, "message": {"role": "assistant", "content": MODEL_TEXT}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 0, "completion_tokens": 1, "total_tokens": 1}})
+                self._send(200, result)
         elif path in ("/api/chat", "/api/generate"):
             chat = path == "/api/chat"
-            result = {"model": model, "created_at": timestamp(), "done": True, "done_reason": "stop", "total_duration": 120000000, "load_duration": 10000000, "prompt_eval_count": 0, "eval_count": 1, "eval_duration": 10000000}
-            result["message" if chat else "response"] = {"role": "assistant", "content": MODEL_TEXT} if chat else MODEL_TEXT
+            result = ollama_response(payload, model, timestamp(), chat)
             if payload.get("stream", True) is False:
                 self._send(200, result)
             else:
