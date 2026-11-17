@@ -16,7 +16,7 @@ From the repository root:
 docker compose -f compose.full-lab.yaml up --build -d
 ```
 
-An **ephemeral privileged initializer** creates persistent random secrets and synthetic canary registry in private Docker named volumes. The initializer only has `CHOWN` capability to set up non-root volume permissions. It does not write secrets to your repo or echo their values. The remaining services run as non-root UID 10001 with dropped capabilities, read-only container roots and private internal networking.
+An **ephemeral privileged initializer** creates persistent random secrets and synthetic canary registry in private Docker named volumes. The initializer has the narrowly scoped `CHOWN`, `FOWNER`, and `DAC_OVERRIDE` capabilities to manage private named-volume ownership and permissions. It has no network access, runs only once, does not write secrets to your repo, and never echoes key values. The remaining services run as non-root UID 10001 with dropped capabilities and read-only container roots. Sensor and dashboard additionally join a host-facing bridge for localhost-only port publication.
 
 The lab runs these five long-lived services: `sensor`, `collector`, `shipper`, `dashboard`, `test-agent`. A completed one-time `init` container also appears in Compose. The test-agent begins running eight synthetic requests every 45 seconds once the sensor is healthy. It does not require model weights, an API key, or LM Studio.
 
@@ -77,7 +77,7 @@ flowchart LR
 ```
 
 - Ports bound **only** to `127.0.0.1` on the host: sensor `18080`, dashboard `18081`. No collector port is published.
-- Compose's `internal: true` network prevents containers from using the Compose bridge as external egress; apply host-level firewall controls if stronger isolation is needed.
+- The private `internal: true` bridge isolates the collector, shipper and test-agent. Sensor and dashboard also attach to a **separate, non-internal host-facing bridge** so Docker can publish their localhost ports. That frontend bridge may permit egress: **Docker networking alone does not guarantee no outbound network access**. Enforce egress denial with host-level firewalls for higher-assurance deployments. Application code in this stack does not call external inference APIs.
 - Collector listens only on its internal `127.0.0.1:18888`. Shipper shares its network namespace for loopback transport; HMAC authenticates telemetry. No remote collection is enabled.
 - Dashboard shows sanitized, **bounded** metadata only. HTML is escaped, with no external resources or scripts, and explicitly labels synthetic detections. This is a local, read-only viewer, not a full SOC platform.
 - `CAPTURE_MODE=metadata`. Response bodies, real prompts and raw canary marker strings are not saved. The test-agent reads the synthetic registry but has **no access to collector or sensor signing secrets**.
