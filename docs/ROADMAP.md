@@ -46,3 +46,13 @@ This is *not* full central management, high-fidelity deception, a complete MCP s
 - Add per-experiment run IDs and signed session/run association to avoid attributing prior logs to a new experiment.
 - Support reproducible ground-truth labels and independently measured precision/recall, with blinded review.
 - Harden deployment, auth, retention, observability and cross-sensor time synchronization.
+
+## v0.6 — selected high-fidelity API behavior and derived evidence
+
+- Fictional OpenAI/Ollama tool-calling responses, with OpenAI SSE incremental tool-call chunks and capped tool schema metadata. No external tool execution, LLM planning, or real secrets.
+- Privacy-safe derived SHA-256 evidence digest with optional HMAC verification; not acquisition-grade forensic integrity.
+- Regression tests include compatibility-shaped JSON and streams, metadata privacy, and evidence tamper checks.
+
+### Still open
+
+Full SDK interoperability against specific agent/model versions; trust-boundary redirection experiments with independent ground truth; identity/auth hardening, durable fleet queue and independently security-reviewed container deployment.

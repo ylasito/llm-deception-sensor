@@ -1,6 +1,8 @@
-# LLM Deception Sensor v0.5.0
+# LLM Deception Sensor v0.6.0
 
 **MIT-licensed, local-first AI deception and authorized-agent context-exposure research platform.** Independent research prototype. **Not AWS MadPot** or an AWS product. No internet deployment is implied or recommended.
+
+**New in v0.6:** bounded fictional OpenAI/Ollama `tool_calls` emulation (including OpenAI SSE chunks), privacy-filtered turn/tool counts, and optional HMAC-signed derived evidence reports for reproducible local experiments. No real tools execute, and *auto* mode does not autonomously plan. See [v0.6 guide](docs/FIDELITY-V06.md). These are **partial protocol emulations**, not verified fidelity against third-party agents or AWS MadPot.
 
 **New in v0.5:** privacy-filtered metadata-only agent-session sequence triage, deterministic behavioral rules, baseline Jensen–Shannon distribution shift monitoring, and offline intelligence dashboard. No adaptive ML classifier or attack attribution is claimed. See [v0.5 guide](docs/INTELLIGENCE-V05.md).
 
@@ -15,6 +17,8 @@ Python 3.11+, **standard library only** for sensor and collector. Optional `open
 | Capability | State as of v0.5 |
 |---|---|
 | Static OpenAI-compatible and Ollama decoys | Working; inherited v0.2 |
+| v0.6 fictional tool calls + streaming | Implemented for selected OpenAI/Ollama routes, not full conformance |
+| Derived experiment evidence hash/HMAC | Implemented; NOT tamper-proof acquisition or forensic chain-of-custody |
 | Synthetic MCP tools/resources | Working; **selected** 2025-03-26 JSON-RPC subset, not full MCP |
 | Fixed-route local model relay with JSON / SSE / NDJSON | Working; only 127.0.0.1 upstream permitted |
 | Client proxy authentication | Required for proxied routes (`X-Proxy-Token`) |
