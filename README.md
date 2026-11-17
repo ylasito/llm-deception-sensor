@@ -2,7 +2,7 @@
 
 **MIT-licensed, local-first AI deception and authorized-agent context-exposure research platform.** Independent research prototype. **Not AWS MadPot** or an AWS product. No internet deployment is implied or recommended.
 
-**New in v0.6:** bounded fictional OpenAI/Ollama `tool_calls` emulation (including OpenAI SSE chunks), privacy-filtered turn/tool counts, and optional HMAC-signed derived evidence reports for reproducible local experiments. No real tools execute, and *auto* mode does not autonomously plan. See [v0.6 guide](docs/FIDELITY-V06.md). These are **partial protocol emulations**, not verified fidelity against third-party agents or AWS MadPot.
+**Previously in v0.6:** bounded fictional OpenAI/Ollama `tool_calls` emulation (including OpenAI SSE chunks), privacy-filtered turn/tool counts, and optional HMAC-signed derived evidence reports for reproducible local experiments. No real tools execute, and *auto* mode does not autonomously plan. See [v0.6 guide](docs/FIDELITY-V06.md). These are **partial protocol emulations**, not verified fidelity against third-party agents or AWS MadPot.
 
 **New in v0.5:** privacy-filtered metadata-only agent-session sequence triage, deterministic behavioral rules, baseline Jensen–Shannon distribution shift monitoring, and offline intelligence dashboard. No adaptive ML classifier or attack attribution is claimed. See [v0.5 guide](docs/INTELLIGENCE-V05.md).
 
@@ -12,9 +12,25 @@
 
 Python 3.11+, **standard library only** for sensor and collector. Optional `openai` SDK for the external authorized agent adapter. No external inference or online service required in default decoy mode.
 
-## New in v0.7 — Offline Agent Threat Intelligence
+## New: Docker Compose Full Lab (v0.7.1 pilot PR)
 
-The new `ti-campaigns`, `ti-mappings`, `ti-iocs`, and `ti-evaluate` commands support metadata-only pattern grouping, review-only ATT&CK analogies, analyst-supplied IOC validation and paired ground-truth evaluation. These features do not attribute actors, run external enrichment, learn an ML model, or disrupt networks. Read [v0.7 documentation](docs/THREAT-INTELLIGENCE-V07.md).
+**One command** to start a local research stack with synthetic test-agent, fake OpenAI/Ollama/MCP sensor, signed telemetry shipper, SQLite collector, and a read-only web dashboard:
+
+```bash
+docker compose -f compose.full-lab.yaml up --build -d
+```
+
+Dashboard: <http://127.0.0.1:18081> · Sensor health: <http://127.0.0.1:18080/healthz>.
+All secrets and synthetic markers are initialized automatically into private Docker volumes. No model, external API, real agent or production secret is required. A scripted test-client runs eight synthetic requests every 45 seconds; **it is not an autonomous agent**. See [full setup guide](docs/FULL-LAB.md). Docker deployment still needs validation on a Docker-equipped host; local Python integration tests alone do not prove Compose networking.
+
+## New in v0.7 — offline threat intelligence research
+
+- `ti-campaigns`: groups **metadata-only** sessions into reproducible behavior-pattern hypotheses in bounded time buckets. **No actor attribution**.
+- `ti-mappings`: lists limited **ATT&CK analogy candidates** for analyst review. No MITRE ATLAS technique IDs are asserted without independent verification.
+- `ti-iocs`: validates and deduplicates **analyst-supplied** IPv4/domain/SHA-256/HTTPS URL indicators (not scraped from request bodies); all are unverified, never automatically blocked.
+- `ti-evaluate`: independently supplied positive/negative truth and prediction JSON arrays, with TP/FP/FN/TN, precision, recall, false-positive rate, and explicit missing-prediction counts.
+
+See [v0.7 threat intelligence guide](docs/THREAT-INTELLIGENCE-V07.md). This is a defensive offline research engine and does not perform network enrichment, threat attribution or automatic disruption.
 
 ## Capability matrix
 

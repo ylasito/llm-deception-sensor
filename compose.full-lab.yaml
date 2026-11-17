@@ -1,0 +1,130 @@
+# Single-command, localhost-only, synthetic Full Lab.
+# docker compose -f compose.full-lab.yaml up --build -d
+# Access: http://127.0.0.1:18081 (dashboard), http://127.0.0.1:18080 (decoy).
+name: llm-deception-full-lab
+x-safe: &safe
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  pids_limit: 100
+  mem_limit: 192m
+  tmpfs:
+    - /tmp:size=8m,noexec,nosuid
+  networks: [lab_private]
+services:
+  init:
+    build: .
+    # One-shot root bootstrap only: chown fresh named volumes to uid 10001.
+    user: "0:0"
+    command: ["python", "-m", "deceptionsensor.full_lab", "init"]
+    restart: "no"
+    healthcheck:
+      disable: true
+    network_mode: none
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    volumes:
+      - lab_secrets:/run/lab-secrets
+      - lab_shared:/lab
+      - sensor_data:/data
+      - fleet_data:/fleet
+  sensor:
+    <<: *safe
+    build: .
+    command: ["python", "-m", "deceptionsensor.full_lab", "sensor"]
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      LOG_DIR: /data
+      CAPTURE_MODE: metadata
+      REQUESTS_PER_MINUTE: "120"
+    ports:
+      - "127.0.0.1:18080:8080"
+    volumes:
+      - sensor_data:/data
+      - lab_secrets:/run/lab-secrets:ro
+      - lab_shared:/lab:ro
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+  collector:
+    <<: *safe
+    build: .
+    command: ["python", "-m", "deceptionsensor", "collector", "--keys", "/run/lab-secrets/collector-keys.json", "--database", "/fleet/events.sqlite3", "--host", "127.0.0.1", "--port", "18888"]
+    volumes:
+      - lab_secrets:/run/lab-secrets:ro
+      - fleet_data:/fleet
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18888/healthz',timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 8
+    restart: unless-stopped
+  shipper:
+    # Shares collector network namespace, so plaintext HMAC telemetry stays on loopback.
+    build: .
+    network_mode: service:collector
+    command: ["python", "-m", "deceptionsensor", "ship", "--log-dir", "/data", "--url", "http://127.0.0.1:18888", "--sensor-id", "local-sensor", "--key-file", "/run/lab-secrets/shipper-key.txt", "--follow", "--interval", "3"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 100
+    mem_limit: 96m
+    tmpfs: [/tmp:size=8m,noexec,nosuid]
+    healthcheck:
+      disable: true
+    volumes:
+      - sensor_data:/data:ro
+      - lab_secrets:/run/lab-secrets:ro
+    depends_on:
+      collector:
+        condition: service_healthy
+      sensor:
+        condition: service_healthy
+    restart: unless-stopped
+  dashboard:
+    <<: *safe
+    build: .
+    command: ["python", "-m", "deceptionsensor.full_lab", "dashboard"]
+    ports:
+      - "127.0.0.1:18081:8081"
+    volumes:
+      - fleet_data:/fleet:ro
+    depends_on:
+      collector:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/healthz',timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 8
+    restart: unless-stopped
+  test-agent:
+    <<: *safe
+    build: .
+    command: ["python", "-m", "deceptionsensor.full_lab", "test-agent", "--interval", "45"]
+    environment:
+      PYTHONUNBUFFERED: "1"
+    healthcheck:
+      disable: true
+    volumes:
+      - lab_shared:/lab:ro
+    depends_on:
+      sensor:
+        condition: service_healthy
+    restart: unless-stopped
+networks:
+  lab_private:
+    driver: bridge
+    internal: true
+volumes:
+  sensor_data:
+  fleet_data:
+  lab_secrets:
+  lab_shared:

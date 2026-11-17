@@ -57,6 +57,14 @@ This is *not* full central management, high-fidelity deception, a complete MCP s
 
 Full SDK interoperability against specific agent/model versions; trust-boundary redirection experiments with independent ground truth; identity/auth hardening, durable fleet queue and independently security-reviewed container deployment.
 
-## v0.7 — Offline Agent Threat Intelligence
+## v0.7 — bounded offline threat intelligence research
 
-Metadata-only pattern grouping, unverified IOC normalization, conservative ATT&CK analogies and independent labeled precision/recall evaluation. No malicious-actor attribution, live IOC enrichment, model training, automated blocking or production deployment.
+Added strict metadata-only pattern correlation, review-only technique analogy candidates, safe analyst-supplied IOC validation and independent labeled evaluation. No live IOC enrichment, real actor attribution, ML classifier or automated disruption. Production and external-agent validation remain uncompleted.
+
+## v0.7.1 Full Lab pilot — awaiting Docker deployment verification
+
+- Standalone Docker Compose with automatic localhost lab-secret initialization and private synthetic registry.
+- Host-local sensor and read-only web dashboard, HMAC telemetry shipper, SQLite collector, synthetic test-agent.
+- No real model, arbitrary tool execution, cloud inference or public collector.
+- Python end-to-end integration tests cover the entire telemetry path. Docker smoke CI is required before deployed-stack validation.
+- Does not address external agent interoperability, durable shipper queues, or MadPot parity.
