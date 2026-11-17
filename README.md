@@ -1,4 +1,4 @@
-# LLM Deception Sensor v0.6.0
+# LLM Deception Sensor v0.7.0
 
 **MIT-licensed, local-first AI deception and authorized-agent context-exposure research platform.** Independent research prototype. **Not AWS MadPot** or an AWS product. No internet deployment is implied or recommended.
 
@@ -11,6 +11,10 @@
 **Inherited from v0.3:** authenticated **local-only inference relay** for a real model server; safe synthetic canary measurement; HMAC-signed, per-sensor **fleet telemetry collection**; SQLite deduplication; central offline reporting and HTML dashboard; collector-side optional TLS; isolated Docker Compose fleet overlay. It retains the v0.2 decoy OpenAI/Ollama/MCP API and calibration features.
 
 Python 3.11+, **standard library only** for sensor and collector. Optional `openai` SDK for the external authorized agent adapter. No external inference or online service required in default decoy mode.
+
+## New in v0.7 — Offline Agent Threat Intelligence
+
+The new `ti-campaigns`, `ti-mappings`, `ti-iocs`, and `ti-evaluate` commands support metadata-only pattern grouping, review-only ATT&CK analogies, analyst-supplied IOC validation and paired ground-truth evaluation. These features do not attribute actors, run external enrichment, learn an ML model, or disrupt networks. Read [v0.7 documentation](docs/THREAT-INTELLIGENCE-V07.md).
 
 ## Capability matrix
 

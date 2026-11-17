@@ -56,3 +56,7 @@ This is *not* full central management, high-fidelity deception, a complete MCP s
 ### Still open
 
 Full SDK interoperability against specific agent/model versions; trust-boundary redirection experiments with independent ground truth; identity/auth hardening, durable fleet queue and independently security-reviewed container deployment.
+
+## v0.7 — Offline Agent Threat Intelligence
+
+Metadata-only pattern grouping, unverified IOC normalization, conservative ATT&CK analogies and independent labeled precision/recall evaluation. No malicious-actor attribution, live IOC enrichment, model training, automated blocking or production deployment.
