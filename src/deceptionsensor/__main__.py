@@ -18,6 +18,7 @@ from .research import research_init, research_run, research_report
 from .behavior import cluster_sessions
 from .intelligence import intelligence_report, drift_report, write_report, render_intelligence_dashboard
 from .evidence import create_report, verify_report, write_private
+from .threatintel import campaign_report, mapping_report, ioc_report, evaluation_report
 
 
 def fleet_action(db: Path, command: str, output: Path | None = None) -> dict:
@@ -44,7 +45,7 @@ def fleet_action(db: Path, command: str, output: Path | None = None) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LLM Deception Sensor v0.6.0 (authorized research)")
+    parser = argparse.ArgumentParser(description="LLM Deception Sensor v0.7.0 (authorized research)")
     sub = parser.add_subparsers(dest="command")
     summary = sub.add_parser("summary", help="Offline aggregated telemetry")
     summary.add_argument("--log-dir", default="./data")
@@ -141,8 +142,28 @@ def main() -> None:
         if cmd != "fleet-report":
             cli.add_argument("--output", required=True)
 
+    ti1 = sub.add_parser("ti-campaigns", help="Offline metadata pattern groups, not actor attribution")
+    ti1.add_argument("--log-dir", default="./data")
+    ti1.add_argument("--bucket-minutes", type=int, default=60)
+    ti1.add_argument("--minimum-sessions", type=int, default=2)
+    ti2 = sub.add_parser("ti-mappings", help="Candidate ATT&CK analogies for analyst review")
+    ti2.add_argument("--log-dir", default="./data")
+    ti3 = sub.add_parser("ti-iocs", help="Review only analyst-supplied indicators")
+    ti3.add_argument("--input", required=True)
+    ti4 = sub.add_parser("ti-evaluate", help="Evaluate independent positive/negative label files")
+    ti4.add_argument("--predictions", required=True)
+    ti4.add_argument("--truth", required=True)
     args = parser.parse_args()
-    if args.command == "summary":
+    if args.command == "ti-campaigns":
+        result = campaign_report(Path(args.log_dir), bucket_minutes=args.bucket_minutes,
+                                 minimum_sessions=args.minimum_sessions)
+    elif args.command == "ti-mappings":
+        result = mapping_report(Path(args.log_dir))
+    elif args.command == "ti-iocs":
+        result = ioc_report(Path(args.input))
+    elif args.command == "ti-evaluate":
+        result = evaluation_report(Path(args.predictions), Path(args.truth))
+    elif args.command == "summary":
         result = report(Path(args.log_dir))
     elif args.command == "dashboard":
         result = generate(Path(args.log_dir), Path(args.output))
