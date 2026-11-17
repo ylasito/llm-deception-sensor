@@ -76,7 +76,8 @@ services:
     security_opt: ["no-new-privileges:true"]
     pids_limit: 100
     mem_limit: 96m
-    tmpfs: [/tmp:size=8m,noexec,nosuid]
+    tmpfs:
+      - "/tmp:size=8m,noexec,nosuid"
     healthcheck:
       disable: true
     volumes:
