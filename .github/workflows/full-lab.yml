@@ -1,0 +1,45 @@
+name: Docker Full Lab smoke
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  full-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose syntax
+        run: docker compose -f compose.full-lab.yaml config --quiet
+      - name: Build and start complete local lab
+        run: docker compose -f compose.full-lab.yaml up --build -d --wait --wait-timeout 150
+      - name: Verify synthetic telemetry reaches dashboard
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request
+          url = 'http://127.0.0.1:18081/api/summary'
+          for attempt in range(45):
+              try:
+                  with urllib.request.urlopen(url, timeout=3) as response:
+                      info = json.load(response)
+                  if info.get('total_events', 0) >= 8 and info.get('synthetic_exposure_events', 0) >= 4:
+                      print('Full Lab smoke passed:', info['total_events'], 'events')
+                      break
+              except (OSError, ValueError) as exc:
+                  print('Waiting for dashboard:', type(exc).__name__)
+              time.sleep(2)
+          else:
+              raise SystemExit('Full Lab telemetry not observed within smoke test window')
+          PY
+      - name: Check collector report
+        run: docker compose -f compose.full-lab.yaml exec -T collector python -m deceptionsensor fleet-report --database /fleet/events.sqlite3
+      - name: Inspect services if unsuccessful
+        if: failure()
+        run: |
+          docker compose -f compose.full-lab.yaml ps || true
+          docker compose -f compose.full-lab.yaml logs --no-color --tail=80 || true
+      - name: Clean up lab and synthetic volumes
+        if: always()
+        run: docker compose -f compose.full-lab.yaml down -v --remove-orphans
