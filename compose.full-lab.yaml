@@ -40,6 +40,8 @@ services:
       LOG_DIR: /data
       CAPTURE_MODE: metadata
       REQUESTS_PER_MINUTE: "120"
+    # A separate host-facing bridge permits loopback port publishing; test-agent and collector remain internal only.
+    networks: [lab_private, lab_frontend]
     ports:
       - "127.0.0.1:18080:8080"
     volumes:
@@ -93,6 +95,7 @@ services:
     <<: *safe
     build: .
     command: ["python", "-m", "deceptionsensor.full_lab", "dashboard"]
+    networks: [lab_private, lab_frontend]
     ports:
       - "127.0.0.1:18081:8081"
     volumes:
@@ -124,6 +127,10 @@ networks:
   lab_private:
     driver: bridge
     internal: true
+  # Allows Docker to publish sensor/dashboard to 127.0.0.1 on the host.
+  # This bridge has potential egress: apply host firewall policy for stronger isolation.
+  lab_frontend:
+    driver: bridge
 volumes:
   sensor_data:
   fleet_data:
